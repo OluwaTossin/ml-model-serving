@@ -50,4 +50,10 @@ jobs:
           chmod 600 private_key.pem
           scp -i private_key.pem -o StrictHostKeyChecking=no app.py ec2-user@54.196.167.141:/home/ec2-user/app.py
           scp -i private_key.pem -o StrictHostKeyChecking=no model.pkl ec2-user@54.196.167.141:/home/ec2-user/model.pkl
-          ssh -i private_key.pem -o StrictHostKeyChecking=no ec2-user@54.196.167.141 "nohup python3 /home/ec2-user/app.py &"
+          ssh -i private_key.pem -o StrictHostKeyChecking=no ec2-user@54.196.167.141 << EOF
+            sudo apt-get update
+            sudo apt-get install -y python3-pip
+            pip3 install --upgrade pip
+            pip3 install flask joblib boto3 scikit-learn pandas
+            nohup python3 /home/ec2-user/app.py &
+          EOF
