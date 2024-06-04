@@ -39,9 +39,9 @@ jobs:
           echo "region = ${{ secrets.AWS_REGION }}" >> ~/.aws/config
 
       - name: Deploy to EC2
-  run: |
-    echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
-    chmod 600 private_key.pem
-    scp -i private_key.pem -o StrictHostKeyChecking=no app.py ec2-user@52.206.138.43:/home/ec2-user/app.py
-    scp -i private_key.pem -o StrictHostKeyChecking=no model.pkl ec2-user@52.206.138.43:/home/ec2-user/model.pkl
-    ssh -i private_key.pem -o StrictHostKeyChecking=no ec2-user@52.206.138.43 "nohup python3 /home/ec2-user/app.py &"
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+          scp -i private_key.pem -o StrictHostKeyChecking=no app.py ec2-user@52.206.138.43:/home/ec2-user/app.py
+          scp -i private_key.pem -o StrictHostKeyChecking=no model.pkl ec2-user@52.206.138.43:/home/ec2-user/model.pkl
+          ssh -i private_key.pem -o StrictHostKeyChecking=no ec2-user@52.206.138.43 "nohup python3 /home/ec2-user/app.py &"
