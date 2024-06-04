@@ -16,13 +16,15 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y unzip
+          sudo apt-get install -y python3-pip
+          pip3 install --upgrade pip
+          pip3 install flask joblib boto3 scikit-learn pandas
 
       - name: Install AWS CLI
         run: |
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
-          sudo ./aws/install
+          sudo ./aws/install --update
 
       - name: Verify AWS CLI installation
         run: aws --version
@@ -38,4 +40,6 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} ec2-user@52.206.138.43 'cd flask_app && git pull origin main && sudo systemctl restart flask_app'
+          scp -i ${{ secrets.SSH_PRIVATE_KEY }} -o StrictHostKeyChecking=no app.py ec2-user@52.206.138.43:/home/ec2-user/app.py
+          scp -i ${{ secrets.SSH_PRIVATE_KEY }} -o StrictHostKeyChecking=no model.pkl ec2-user@52.206.138.43:/home/ec2-user/model.pkl
+          ssh -i ${{ secrets.SSH_PRIVATE_KEY }} -o StrictHostKeyChecking=no ec2-user@52.206.138.43 "nohup python3 /home/ec2-user/app.py &"
