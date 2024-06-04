@@ -13,27 +13,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Build, tag, and push image to ECR
+      - name: Install dependencies
         run: |
-          docker build -t ml-model .
-          docker tag ml-model:latest ${{ steps.login-ecr.outputs.registry }}/ml-model:latest
-          docker push ${{ steps.login-ecr.outputs.registry }}/ml-model:latest
-        env:
-          AWS_REGION: us-west-2
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip
 
-      - name: Deploy to EC2
+      - name: Install AWS CLI
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
-          chmod 600 private_key.pem
-          ssh -i private_key.pem -o StrictHostKeyChecking=no ec2-user@52.206.138.43 'docker pull ${{ steps.login-ecr.outputs.registry }}/ml-model:latest && docker run -d -p 5000:5000 ${{ steps.login-ecr.outputs.registry }}/ml-model:latest'
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+
+      - name: Copy files to EC2 instance
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          EC2_PUBLIC_IP: 52.206.138.43
+        run: |
+          scp -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY app.py ec2-user@$EC2_PUBLIC_IP:/home/ec2-user/app.py
+          scp -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY requirements.txt ec2-user@$EC2_PUBLIC_IP:/home/ec2-user/requirements.txt
+          scp -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY model.pkl ec2-user@$EC2_PUBLIC_IP:/home/ec2-user/model.pkl
+
+      - name: SSH into EC2 instance and set up the Flask app
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          EC2_PUBLIC_IP: 52.206.138.43
+        run: |
+          ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY ec2-user@$EC2_PUBLIC_IP << 'EOF'
+            sudo yum update -y
+            sudo yum install -y python3 python3-pip
+            pip3 install -r /home/ec2-user/requirements.txt
+            nohup python3 /home/ec2-user/app.py &
+          EOF
