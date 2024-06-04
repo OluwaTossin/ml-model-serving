@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3 python3-pip
+          sudo apt-get install -y unzip
 
       - name: Install AWS CLI
         run: |
@@ -24,23 +24,12 @@ jobs:
           unzip awscliv2.zip
           sudo ./aws/install
 
-      - name: Copy files to EC2 instance
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          EC2_PUBLIC_IP: 52.206.138.43
+      - name: Configure AWS credentials
         run: |
-          scp -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY app.py ec2-user@$EC2_PUBLIC_IP:/home/ec2-user/app.py
-          scp -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY requirements.txt ec2-user@$EC2_PUBLIC_IP:/home/ec2-user/requirements.txt
-          scp -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY model.pkl ec2-user@$EC2_PUBLIC_IP:/home/ec2-user/model.pkl
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region ${{ secrets.AWS_REGION }}
 
-      - name: SSH into EC2 instance and set up the Flask app
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          EC2_PUBLIC_IP: 52.206.138.43
+      - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY ec2-user@$EC2_PUBLIC_IP << 'EOF'
-            sudo yum update -y
-            sudo yum install -y python3 python3-pip
-            pip3 install -r /home/ec2-user/requirements.txt
-            nohup python3 /home/ec2-user/app.py &
-          EOF
+          ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} ec2-user@52.206.138.43 'cd flask_app && git pull origin main && sudo systemctl restart flask_app'
