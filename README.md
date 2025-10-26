@@ -18,15 +18,20 @@ A production-ready Flask API for serving machine learning models with automated 
 
 ## 📋 Table of Contents
 
-- [Installation](#installation)
-- [Usage](#usage)
-- [API Endpoints](#api-endpoints)
-- [Configuration](#configuration)
-- [Deployment](#deployment)
-- [Development](#development)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
+- [Installation](#️-installation)
+- [Usage](#-usage)
+- [API Endpoints](#-api-endpoints)
+- [Configuration](#️-configuration)
+- [Deployment](#-deployment)
+- [Development](#-development)
+- [Testing](#-testing)
+- [Dependencies](#-dependencies)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Authors](#-authors)
+- [Acknowledgments](#-acknowledgments)
+- [Support](#-support)
 
 ## 🛠️ Installation
 
